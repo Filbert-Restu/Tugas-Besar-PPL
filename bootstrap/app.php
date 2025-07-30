@@ -11,7 +11,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Register custom middleware
+        $middleware->alias([
+            'auth.custom' => \App\Http\Middleware\AuthMiddleware::class,
+            'logging' => \App\Http\Middleware\LoggingMiddleware::class,
+        ]);
+
+        // Apply logging middleware globally
+        $middleware->web(append: [
+            \App\Http\Middleware\LoggingMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
