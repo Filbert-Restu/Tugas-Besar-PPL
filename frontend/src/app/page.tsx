@@ -1,4 +1,3 @@
-// Wajib ada di paling atas untuk interaktivitas
 'use client';
 
 // Impor React dan 'useState'
