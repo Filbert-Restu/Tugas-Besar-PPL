@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Seller;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -35,33 +37,84 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
+        $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        // =================================================
+        // 1. CEK USER BIASA / ADMIN (Tabel Users)
+        // =================================================
+        // Login langsung, TANPA cek email_verified_at
+        if (Auth::guard('web')->attempt($credentials)) {
+            /** @var \App\Models\User $user */
+            $user = Auth::guard('web')->user();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'message' => 'Login User berhasil',
+                'token' => $token,
+                'user' => [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    // Kita kirim role agar frontend bisa redirect
+                    // Default 'admin' atau 'user' sesuai DB kamu
+                    'role' => $user->role ?? 'platform', 
+                ]
             ]);
         }
 
-        // Check if email is verified
-        if (!$user->hasVerifiedEmail()) {
+        // =================================================
+        // 2. CEK SELLER (Tabel Sellers)
+        // =================================================
+        // Karena di tabel seller kolom loginnya 'email_pic', kita sesuaikan kuncinya
+        $sellerCredentials = [
+            'email_pic' => $credentials['email'], // Mapping input 'email' ke 'email_pic'
+            'password'  => $credentials['password']
+        ];
+
+        if (Auth::guard('seller')->attempt($sellerCredentials)) {
+            /** @var \App\Models\Seller $seller */
+            $seller = Auth::guard('seller')->user();
+            
+            // --- LOGIKA CEK STATUS VERIFIKASI ---
+            // Sesuai migration kamu: is_active default false
+            if (!$seller->is_active) { 
+                
+                // Cek status detailnya untuk pesan error yang informatif
+                $msg = $seller->verification_status === 'pending' 
+                    ? 'Akun Toko Anda sedang dalam peninjauan Admin. Mohon tunggu.' 
+                    : 'Maaf, pendaftaran Toko Anda ditolak.';
+
+                // Logoutkan paksa karena belum aktif
+                Auth::guard('seller')->logout();
+
+                return response()->json([
+                    'message' => $msg,
+                    'is_active' => false
+                ], 403); 
+            }
+            // ----------------------------------------
+
+            $token = $seller->createToken('seller_token')->plainTextToken;
+
             return response()->json([
-                'message' => 'Please verify your email address before logging in. Check your email for verification link.',
-                'email_verified' => false
-            ], 403);
+                'message' => 'Login Seller berhasil',
+                'token' => $token,
+                'user' => [
+                    'name' => $seller->nama_pic, // Sesuaikan dengan kolom nama di tabel seller
+                    'email' => $seller->email_pic,
+                    'role' => 'seller', // Hardcode role seller
+                ]
+            ]);
         }
 
-        $token = $user->createToken('auth-token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login successful',
-            'token' => $token,
-            'user' => $user
+        // =================================================
+        // 3. JIKA GAGAL DI KEDUANYA
+        // =================================================
+        throw ValidationException::withMessages([
+            'email' => ['Email atau Password salah.'],
         ]);
     }
 

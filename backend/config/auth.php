@@ -36,9 +36,13 @@ return [
     */
 
     'guards' => [
-        'web' => [
+        'web' => [ // Untuk tabel users (admin/user biasa)
             'driver' => 'session',
             'provider' => 'users',
+        ],
+        'seller' => [ // Guard baru untuk tabel sellers
+            'driver' => 'session', // atau 'sanctum' kalau API
+            'provider' => 'sellers',
         ],
     ],
 
@@ -62,13 +66,12 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\User::class,
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'sellers' => [ // Provider baru
+            'driver' => 'eloquent',
+            'model' => App\Models\Seller::class,
+        ],
     ],
 
     /*
