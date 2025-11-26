@@ -1,28 +1,29 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\Seller\RegisteredSellerController;
+use App\Http\Controllers\Admin\SellerVerificationController;
 use Illuminate\Support\Facades\Route;
 
-// Public routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
-Route::post('/email/resend', [AuthController::class, 'resendVerification']);
-
-// Protected routes
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
-    Route::post('/logout', [AuthController::class, 'logout']);
+// Authentication Routes
+Route::controller(AuthenticatedSessionController::class)->group(function () {
+    Route::post('/login', 'store')->name('login');
+    Route::post('/logout', 'destroy')->name('logout');
 });
 
-Route::get('/halo', function () {
-    $data = [
-        'pesan' => 'Halo! Ini adalah respons dari backend Laravel Anda.',
-        'status' => 'sukses'
-    ];
+// Seller Auth Routes
+Route::prefix('seller')->name('seller.')->group(function () {
+    // Public routes - Registrasi & Login
+    Route::post('/register', [RegisteredSellerController::class, 'store'])->name('seller-register');
 
-    return response()->json($data);
+});
+
+// Admin Routes - Seller Verification
+Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::prefix('sellers')->name('sellers.')->controller(SellerVerificationController::class)->group(function () {
+
+        // Single Actions
+        Route::post('/approve', 'approve')->name('approve');
+    });
 });

@@ -18,11 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'role' => \App\Http\Middleware\CheckRole::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            'register',
-            'login',
+            'api/*',  // Exclude all API routes from CSRF verification
         ]);
 
         //

@@ -16,18 +16,15 @@ return new class extends Migration
 
             $table->string('nama_toko');
             $table->text('deskripsi_singkat')->nullable();
-            $table->string('nomor_telepon');
-            $table->string('alamat');
+            $table->string('nomor_telepon', 20);
+            $table->foreignId('kelurahan_id');
             $table->char('RT', 3);
             $table->char('RW', 3);
-            $table->string('nama_kelurahan');
-            $table->string('nama_kabupaten_kota');
-            $table->string('nama_provinsi');
+            $table->string('detail_alamat');
             $table->string('no_ktp');
-            $table->string('foto_penjual');
-            $table->string('foto_ktp');
-            $table->enum('status_verifikasi', ['terverifikasi', 'belum_terverifikasi', 'ditolak'])->default('belum_terverifikasi');
-            $table->foreignId('lokasi_id')->constrained('lokasi')->onDelete('cascade');
+            $table->string('foto_penjual')->nullable();
+            $table->string('foto_ktp')->nullable();
+            $table->enum('status', ['verified', 'pending', 'rejected'])->default('pending');
             $table->timestamps();
         });
     }
