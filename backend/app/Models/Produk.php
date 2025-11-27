@@ -1,0 +1,85 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Produk extends Model
+{
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'produk';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'user_id',
+        'nama_produk',
+        'kategori_produk_id',
+        'deskripsi_produk',
+        'harga_produk',
+        'berat_produk',
+        'stok_produk',
+        'foto_produk',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'harga_produk' => 'decimal:2',
+        'berat_produk' => 'decimal:2',
+        'stok_produk' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    /**
+     * Get the seller (user) that owns the produk.
+     */
+    public function seller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get the kategori that owns the produk.
+     */
+    public function kategori(): BelongsTo
+    {
+        return $this->belongsTo(KategoriProduk::class, 'kategori_produk_id');
+    }
+
+    /**
+     * Get the foto produk URL.
+     */
+    public function getFotoProdukUrlAttribute(): ?string
+    {
+        return $this->foto_produk ? asset('storage/' . $this->foto_produk) : null;
+    }
+
+    /**
+     * Scope a query to only include products in stock.
+     */
+    public function scopeInStock($query)
+    {
+        return $query->where('stok_produk', '>', 0);
+    }
+
+    /**
+     * Scope a query to only include products out of stock.
+     */
+    public function scopeOutOfStock($query)
+    {
+        return $query->where('stok_produk', '=', 0);
+    }
+}

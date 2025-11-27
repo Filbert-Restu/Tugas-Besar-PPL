@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kategori', function (Blueprint $table) {
+        Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_kategori');
+            $table->foreignId('user_id')->constrained('users', 'id');
+            $table->decimal('total_amount', 15, 2);
+            $table->enum('status', ['pending', 'completed', 'canceled']); // e.g., pending, completed, canceled
             $table->timestamps();
         });
     }
@@ -23,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kategori');
+        Schema::dropIfExists('transactions');
     }
 };
