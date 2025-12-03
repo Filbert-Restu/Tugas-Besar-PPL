@@ -1,5 +1,4 @@
 import axios from 'axios';
-// import { useRouter } from 'next/navigation'; // (Opsional, untuk penanganan 401)
 
 const API_URL = 'http://localhost:8000';
 
@@ -9,17 +8,21 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
+  withCredentials: true, // Enable cookies for session
 });
 
+// Get CSRF token before making requests
 apiClient.interceptors.request.use(
-  (config) => {
-    let token: string | null = null;
+  async (config) => {
+    // Get CSRF cookie if not already set
     if (typeof window !== 'undefined') {
-      token = localStorage.getItem('authToken');
-    }
+      const hasCsrfCookie = document.cookie.includes('XSRF-TOKEN');
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      if (!hasCsrfCookie) {
+        await axios.get(`${API_URL}/sanctum/csrf-cookie`, {
+          withCredentials: true,
+        });
+      }
     }
 
     return config;
@@ -36,8 +39,9 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-        window.location.href = '/';
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userData');
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);

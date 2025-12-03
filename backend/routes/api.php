@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\SellerVerificationController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\AdminCategoryProductController;
+use App\Http\Controllers\Seller\SellerDashboardController;
 
 // Authentication Routes
 Route::controller(AuthenticatedSessionController::class)->group(function () {
@@ -27,15 +28,19 @@ Route::prefix('seller')->name('seller.')->group(function () {
         Route::put('/profile', [SellerProfilController::class, 'updateProfile'])->name('profile.update');
         // Route::get('/products', [SellerProductController::class, 'detail'])->name('products.detail');
         Route::prefix('dashboard')->name('dashboard.')->group(function () {
+            Route::get('/', [SellerDashboardController::class, 'show'])->name('index');
             // Route::get('/', [SellerProfilController::class, 'dashboard'])->name('index');
 
             // tambah kurang hapus edit produk
-            Route::get('/products', [SellerProductController::class, 'show'])->name('products.list');
-            Route::post('/products/add', [SellerProductController::class, 'add'])->name('products.add');
-            // Route::post('/products', [SellerProductController::class, 'edit'])->name('products.list');
-            // Route::post('/products', [SellerProductController::class, 'sum'])->name('products.list');
-            // Route::post('/products', [SellerProductController::class, 'sub'])->name('products.list');
-            // Route::post('/products', [SellerProductController::class, 'delete'])->name('products.list');
+            Route::prefix('products')->name('products.')->group(function () {
+                Route::get('/', [SellerProductController::class, 'show'])->name('.list');
+                Route::post('/add', [SellerProductController::class, 'add'])->name('.add');
+                Route::put('/edit', [SellerProductController::class, 'edit'])->name('.edit');
+                Route::post('/sum', [SellerProductController::class, 'sum'])->name('.sum');
+                Route::post('/sub', [SellerProductController::class, 'sub'])->name('.sub');
+                Route::post('/delete', [SellerProductController::class, 'delete'])->name('.delete');
+
+            });
 
         });
     });

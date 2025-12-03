@@ -6,7 +6,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/apiClient';
 import { isAxiosError } from 'axios';
-import { ILoginPayload, ILoginResponse, IErrorResponse } from '@/types/auth';
+interface LoginResponse {
+  message: string;
+  data: {
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      role: string;
+    };
+    role: string;
+    redirect_to: string;
+  };
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,34 +38,52 @@ export default function LoginPage() {
     setError(null);
     setSuccess(null);
 
-    const loginBody: ILoginPayload = {
-      email: formData.email,
-      password: formData.password,
-    };
-
     try {
-      const response = await apiClient.post('/login', loginBody);
-      const data = response.data as ILoginResponse;
-      setSuccess('Login berhasil!');
-      localStorage.setItem('authToken', data.token);
-      router.push('/admin/dashboard');
+      const response = await apiClient.post('/api/login', {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      const data = response.data as LoginResponse;
+
+      setSuccess('Login berhasil! Mengalihkan...');
+
+      // Save user data to localStorage (session is handled by cookies)
+      localStorage.setItem('userRole', data.data.role);
+      localStorage.setItem('userData', JSON.stringify(data.data.user));
+
+      // Redirect based on role
+      setTimeout(() => {
+        if (data.data.role === 'admin') {
+          router.push('/admin/dashboard');
+        } else if (data.data.role === 'penjual') {
+          router.push('/seller/dashboard');
+        } else if (data.data.role === 'pembeli') {
+          router.push('/home');
+        } else {
+          router.push('/');
+        }
+      }, 1000);
     } catch (err) {
       if (isAxiosError(err) && err.response) {
-        const errorData = err.response.data as IErrorResponse;
+        const errorData = err.response.data;
+        let errorMessage = errorData.message || 'Terjadi kesalahan.';
 
-        // Check if error is due to unverified email
-        if (err.response.status === 403 && errorData.email_verified === false) {
-          setError(
-            errorData.message +
-              '\n\nBelum menerima email? Cek folder spam atau kirim ulang email verifikasi.'
-          );
-        } else {
-          let errorMessage = errorData.message || 'Terjadi kesalahan.';
-          if (errorData.errors) {
-            errorMessage = Object.values(errorData.errors).flat().join('\n');
+        // Handle specific error cases
+        if (err.response.status === 403) {
+          if (errorData.status === 'pending') {
+            errorMessage =
+              'Akun Anda masih menunggu verifikasi admin. Silakan tunggu konfirmasi melalui email.';
+          } else if (errorData.status === 'rejected') {
+            errorMessage =
+              'Akun Anda ditolak oleh admin. Silakan hubungi administrator untuk informasi lebih lanjut.';
           }
-          setError(errorMessage);
         }
+
+        if (errorData.errors) {
+          errorMessage = Object.values(errorData.errors).flat().join('\n');
+        }
+        setError(errorMessage);
       } else if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -116,7 +146,7 @@ export default function LoginPage() {
       <p className='mt-4 text-center text-gray-600'>
         Belum punya akun?{' '}
         <Link href='/register' className='text-blue-600 hover:underline'>
-          Register di sini
+          Daftar sebagai penjual
         </Link>
       </p>
 

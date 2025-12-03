@@ -123,4 +123,145 @@ class SellerProductController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
             ], 500);
         }
-    }}
+
+    }
+    /**
+     * add product penjual yang sedang login
+     */
+    public function edit(Request $request)
+    {
+        $seller = $request->user()->seller;
+
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Data penjual tidak ditemukan'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'product_id' => ['required', 'integer', 'exists:produk,id'],
+            'nama_produk' => ['sometimes', 'string', 'max:255'],
+            'kategori_produk_id' => ['sometimes', 'integer', 'exists:kategori_produk,id'],
+            'deskripsi_produk' => ['sometimes', 'string'],
+            'harga_produk' => ['sometimes', 'numeric', 'min:0'],
+            'berat_produk' => ['sometimes', 'numeric', 'min:0'],
+            'stok_produk' => ['sometimes', 'integer', 'min:0'],
+            'foto_produk' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Cari produk milik penjual
+            $produk = $seller->produk()->find($validated['product_id']);
+
+            if (!$produk) {
+                return response()->json([
+                    'message' => 'Produk tidak ditemukan atau bukan milik Anda'
+                ], 404);
+            }
+
+            // Update data produk
+            $produk->update($validated);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Produk berhasil diupdate',
+                'data' => $produk->load('kategori'),
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Gagal mengupdate produk',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+            ], 500);
+        }
+    }
+
+    /**
+     * menambahkan qty product penjual yang sedang login
+     */
+    public function sum(Request $request)
+    {
+        $seller = $request->user()->seller;
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Data penjual tidak ditemukan'
+            ], 404);
+        }
+        $validated = $request->validate([
+            'product_id' => ['required', 'integer', 'exists:produk,id'],
+            'stok_produk' => ['required', 'integer', 'min:1'],
+        ]);
+        // Cari produk milik penjual
+        $produk = $seller->produk()->find($validated['product_id']);
+        if (!$produk) {
+            return response()->json([
+                'message' => 'Produk tidak ditemukan atau bukan milik Anda'
+            ], 404);
+        }
+        $produk->increment('stok_produk', $validated['stok_produk']);
+        return response()->json([
+            'message' => 'Stok produk berhasil ditambahkan',
+            'data' => $produk->load('kategori'),
+        ]);
+    }
+
+    /**
+     * mengurangi qty product penjual yang sedang login
+     */
+    public function sub(Request $request)
+    {
+        $seller = $request->user()->seller;
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Data penjual tidak ditemukan'
+            ], 404);
+        }
+        $validated = $request->validate([
+            'product_id' => ['required', 'integer', 'exists:produk,id'],
+            'stok_produk' => ['required', 'integer', 'min:1'],
+        ]);
+        // Cari produk milik penjual
+        $produk = $seller->produk()->find($validated['product_id']);
+        if (!$produk) {
+            return response()->json([
+                'message' => 'Produk tidak ditemukan atau bukan milik Anda'
+            ], 404);
+        }
+        $produk->decrement('stok_produk', $validated['stok_produk']);
+        return response()->json([
+            'message' => 'Stok produk berhasil dikurangi',
+            'data' => $produk->load('kategori'),
+        ]);
+    }
+    /**
+     * menghapus product penjual yang sedang login
+     */
+    public function delete(Request $request)
+    {
+        $seller = $request->user()->seller;
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Data penjual tidak ditemukan'
+            ], 404);
+        }
+        $validated = $request->validate([
+            'product_id' => ['required', 'integer', 'exists:produk,id'],
+        ]);
+        // Cari produk milik penjual
+        $produk = $seller->produk()->find($validated['product_id']);
+        if (!$produk) {
+            return response()->json([
+                'message' => 'Produk tidak ditemukan atau bukan milik Anda'
+            ], 404);
+        }
+        $produk->delete();
+        return response()->json([
+            'message' => 'Produk berhasil dihapus',
+        ]);
+    }
+}
