@@ -72,6 +72,30 @@ class DatabaseSeeder extends Seeder
             'status' => 'verified', // Already verified for testing
         ]);
 
+        // 3. Create seller user
+        $sellerUser1 = User::create([
+            'name' => 'Yaya budi',
+            'email' => 'seller1@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'penjual',
+        ]);
+
+        // 4. Create seller profile
+        Seller::create([
+            'user_id' => $sellerUser1->id,
+            'nama_toko' => 'Toko anjay',
+            'deskripsi_singkat' => 'Toko elektronik terpercaya dengan harga eceran',
+            'nomor_telepon' => '081928374637',
+            'kelurahan_id' => $kelurahan->id,
+            'RT' => '005',
+            'RW' => '007',
+            'detail_alamat' => 'Jl. BILINGAN, ga di kampus ITB',
+            'no_ktp' => '3267474673647873',
+            'foto_penjual' => null,
+            'foto_ktp' => null,
+            'status' => 'pending', // pending for testing
+        ]);
+
         // 5. Call other seeders
         $this->call([
             TokoProductSeeder::class,

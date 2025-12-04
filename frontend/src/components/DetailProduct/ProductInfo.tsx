@@ -42,30 +42,32 @@ export function ProductInfo({ product }: ProductInfoProps) {
       </div>
 
       {/* Shop Info */}
-      <div className='mb-6 pb-6 border-b border-gray-200'>
-        <div className='flex items-center gap-3'>
-          {product.toko.foto_toko ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={product.toko.foto_toko}
-              alt={product.toko.nama_toko}
-              className='w-10 h-10 rounded-full object-cover'
-            />
-          ) : (
-            <div className='w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm'>
-              {product.toko.nama_toko.charAt(0).toUpperCase()}
+      {product.toko && (
+        <div className='mb-6 pb-6 border-b border-gray-200'>
+          <div className='flex items-center gap-3'>
+            {product.toko.foto_toko ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={product.toko.foto_toko}
+                alt={product.toko.nama_toko}
+                className='w-10 h-10 rounded-full object-cover'
+              />
+            ) : (
+              <div className='w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm'>
+                {product.toko.nama_toko?.charAt(0).toUpperCase() || 'T'}
+              </div>
+            )}
+            <div>
+              <h4 className='font-semibold text-gray-900'>
+                {product.toko.nama_toko || 'Nama Toko'}
+              </h4>
+              <p className='text-xs text-gray-500'>
+                {product.toko.lokasi?.kota || 'Lokasi tidak tersedia'}
+              </p>
             </div>
-          )}
-          <div>
-            <h4 className='font-semibold text-gray-900'>
-              {product.toko.nama_toko}
-            </h4>
-            <p className='text-xs text-gray-500'>
-              {product.toko.lokasi.kota || 'Lokasi tidak tersedia'}
-            </p>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Detail Section */}
       <div className='mb-6'>

@@ -55,7 +55,7 @@ export default function LoginPage() {
       // Redirect based on role
       setTimeout(() => {
         if (data.data.role === 'admin') {
-          router.push('/admin/dashboard');
+          router.push('/dashboard');
         } else if (data.data.role === 'penjual') {
           router.push('/seller/dashboard');
         } else if (data.data.role === 'pembeli') {

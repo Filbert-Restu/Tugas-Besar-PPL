@@ -26,7 +26,6 @@ Route::get('/categories', [MainController::class, 'categories'])->name('categori
 
 Route::get('/', [MainController::class, 'index'])->name('index');
 // Route::get('/statistics', [MainController::class, 'statistics'])->name('statistics');
-Route::get('/{nama_toko}/{id}', [MainController::class, 'show'])->name('show');
 
 Route::prefix('reviews')->name('reviews.')->group(function () {
     Route::get('/product/{productId}', [ReviewController::class, 'getProductReviews'])->name('product');
@@ -87,3 +86,5 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum', 'role:admin'
         Route::post('/reset-status', 'resetStatus')->name('reset-status');
     });
 });
+
+Route::get('/{nama_toko}/{id}', [MainController::class, 'show'])->name('show');
