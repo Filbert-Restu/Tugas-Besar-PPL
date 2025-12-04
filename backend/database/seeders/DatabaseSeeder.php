@@ -71,5 +71,10 @@ class DatabaseSeeder extends Seeder
             'foto_ktp' => null,
             'status' => 'verified', // Already verified for testing
         ]);
+
+        // 5. Call other seeders
+        $this->call([
+            TokoProductSeeder::class,
+        ]);
     }
 }

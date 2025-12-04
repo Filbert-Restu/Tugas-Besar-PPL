@@ -12,6 +12,28 @@ use App\Http\Controllers\Admin\SellerVerificationController;
 use App\Http\Controllers\Admin\AdminCategoryProductController;
 use App\Http\Controllers\Seller\SellerDashboardController;
 
+// Main Controller
+use App\Http\Controllers\MainController;
+
+// Review Controller
+use App\Http\Controllers\ReviewController;
+
+// Public Routes - Product Listing
+// IMPORTANT: Specific routes MUST come before /{nama_toko}/{id} catch-all route
+
+// Categories List (Public) - Must be before /{nama_toko}/{id}
+Route::get('/categories', [MainController::class, 'categories'])->name('categories.public');
+
+Route::get('/', [MainController::class, 'index'])->name('index');
+// Route::get('/statistics', [MainController::class, 'statistics'])->name('statistics');
+Route::get('/{nama_toko}/{id}', [MainController::class, 'show'])->name('show');
+
+Route::prefix('reviews')->name('reviews.')->group(function () {
+    Route::get('/product/{productId}', [ReviewController::class, 'getProductReviews'])->name('product');
+    Route::post('/', [ReviewController::class, 'store'])->name('store');
+    Route::delete('/{reviewId}', [ReviewController::class, 'destroy'])->name('destroy');
+});
+
 // Authentication Routes
 Route::controller(AuthenticatedSessionController::class)->group(function () {
     Route::post('/login', 'store')->name('login');
@@ -53,12 +75,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum', 'role:admin'
         Route::prefix('categories')->name('categories.')->controller(AdminCategoryProductController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/add', 'store')->name('store');
+            Route::put('/edit', 'update')->name('update');
             Route::delete('/delete', 'destroy')->name('destroy');
         });
     });
     Route::prefix('sellers')->name('sellers.')->controller(SellerVerificationController::class)->group(function () {
-
-        // Single Actions
+        Route::get('/', 'index')->name('index');
+        Route::get('/{userId}', 'show')->name('show');
         Route::post('/approve', 'approve')->name('approve');
         Route::post('/reject', 'reject')->name('reject');
         Route::post('/reset-status', 'resetStatus')->name('reset-status');

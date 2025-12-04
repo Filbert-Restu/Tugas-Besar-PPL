@@ -13,6 +13,60 @@ use Illuminate\Support\Facades\Mail;
 class SellerVerificationController extends Controller
 {
     /**
+     * daftar penjual butuh verifikasi
+     */
+    public function index()
+    {
+        $sellers = Seller::where('status', 'pending')->with('user')->get();
+        return response()->json([
+            'message' => 'Daftar penjual yang menunggu verifikasi',
+            'data' => $sellers->map(function ($seller) {
+                return [
+                    'user_id' => $seller->user_id,
+                    'nama_toko' => $seller->nama_toko,
+                    'status' => $seller->status,
+                    'created_at' => $seller->created_at,
+                    'email' => $seller->user->email,
+                    'name' => $seller->user->name,
+                ];
+            }),
+        ]);
+    }
+    /**
+     * Detail penjual berdasarkan user_id
+     */
+    public function show($userId) {
+        $seller = Seller::where('user_id', $userId)->with('user')->first();
+
+        if (!$seller) {
+            return response()->json([
+                'message' => 'Penjual tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Detail penjual',
+            'data' => [
+                'user_id' => $seller->user_id,
+                'nama_toko' => $seller->nama_toko,
+                'deskripsi_singkat' => $seller->deskripsi_singkat,
+                'nomor_telepon' => $seller->nomor_telepon,
+                'kelurahan_id' => $seller->kelurahan_id,
+                'RT' => $seller->RT,
+                'RW' => $seller->RW,
+                'detail_alamat' => $seller->detail_alamat,
+                'no_ktp' => $seller->no_ktp,
+                'foto_penjual' => $seller->foto_penjual,
+                'foto_ktp' => $seller->foto_ktp,
+                'status' => $seller->status,
+                'created_at' => $seller->created_at,
+                'updated_at' => $seller->updated_at,
+                'email' => $seller->user->email,
+                'name' => $seller->user->name,
+            ],
+        ]);
+    }
+    /**
      * Approve penjual (ubah status ke verified)
      */
     public function approve(Request $request)

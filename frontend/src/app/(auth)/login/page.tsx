@@ -39,7 +39,7 @@ export default function LoginPage() {
     setSuccess(null);
 
     try {
-      const response = await apiClient.post('/api/login', {
+      const response = await apiClient.post('api/login', {
         email: formData.email,
         password: formData.password,
       });

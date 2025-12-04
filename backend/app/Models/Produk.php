@@ -44,9 +44,25 @@ class Produk extends Model
     ];
 
     /**
-     * Get the seller (user) that owns the produk.
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['rating'];
+
+    /**
+     * Get the seller that owns the produk.
+     * Points to Seller model, not User
      */
     public function seller(): BelongsTo
+    {
+        return $this->belongsTo(Seller::class, 'user_id', 'user_id');
+    }
+
+    /**
+     * Get the user/owner that owns the produk.
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
@@ -60,11 +76,27 @@ class Produk extends Model
     }
 
     /**
+     * Get the reviews for the product.
+     */
+    public function reviews()
+    {
+        return $this->hasMany(ProdukReviews::class, 'product_id');
+    }
+
+    /**
      * Get the foto produk URL.
      */
     public function getFotoProdukUrlAttribute(): ?string
     {
         return $this->foto_produk ? asset('storage/' . $this->foto_produk) : null;
+    }
+
+    /**
+     * Get the average rating from reviews.
+     */
+    public function getRatingAttribute(): float
+    {
+        return round($this->reviews()->avg('rating') ?? 0, 1);
     }
 
     /**

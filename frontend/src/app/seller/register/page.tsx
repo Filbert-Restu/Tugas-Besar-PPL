@@ -137,7 +137,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await apiClient.post('/api/seller/register', formDataToSend, {
+      await apiClient.post('/seller/register', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
