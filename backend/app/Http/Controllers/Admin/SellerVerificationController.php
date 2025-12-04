@@ -17,9 +17,11 @@ class SellerVerificationController extends Controller
      */
     public function index()
     {
-        $sellers = Seller::where('status', 'pending')->with('user')->get();
+        // Get all sellers (pending, verified, rejected) - filter dilakukan di frontend
+        $sellers = Seller::with('user')->orderBy('created_at', 'desc')->get();
+        
         return response()->json([
-            'message' => 'Daftar penjual yang menunggu verifikasi',
+            'message' => 'Daftar semua penjual',
             'data' => $sellers->map(function ($seller) {
                 return [
                     'user_id' => $seller->user_id,
@@ -28,6 +30,7 @@ class SellerVerificationController extends Controller
                     'created_at' => $seller->created_at,
                     'email' => $seller->user->email,
                     'name' => $seller->user->name,
+                    'nomor_telepon' => $seller->nomor_telepon,
                 ];
             }),
         ]);
@@ -129,8 +132,8 @@ class SellerVerificationController extends Controller
 
         $seller->update(['status' => 'rejected']);
 
-        // TODO: Kirim email notifikasi ke penjual dengan alasan penolakan
-        // event(new SellerRejected($seller, $validated['reason'] ?? null));
+        // Kirim email notifikasi ke penjual dengan alasan penolakan
+        Mail::to($seller->user->email)->send(new \App\Mail\SellerRejected($seller, $validated['reason'] ?? null));
 
         return response()->json([
             'message' => 'Penjual berhasil ditolak',

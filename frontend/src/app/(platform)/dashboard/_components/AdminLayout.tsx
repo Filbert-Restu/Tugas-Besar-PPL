@@ -35,13 +35,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   href="/dashboard/active_sellers"
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
                 >
-                  Seller Aktif
+                  Status Seller
                 </Link>
                 <Link
                   href="/dashboard/location_sellers"
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
                 >
                   Lokasi Seller
+                </Link>
+                <Link
+                  href="/dashboard/bintang_products"
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  Produk & Rating Tertinggi
                 </Link>
               </div>
             </div>

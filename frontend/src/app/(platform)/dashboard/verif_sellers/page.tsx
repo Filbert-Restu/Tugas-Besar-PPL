@@ -5,7 +5,6 @@ import { ISeller } from '@/types/verification';
 import apiClient from '@/lib/apiClient';
 import { Button } from '@/components/Button';
 import Link from 'next/link';
-import Image from 'next/image';
 import { AxiosError } from 'axios';
 
 export default function VerifikasiSellerPage() {
@@ -43,12 +42,9 @@ export default function VerifikasiSellerPage() {
       
       setSellers(response.data.data || []);
       
-      // If data is empty, log additional info
-      if (!response.data.data || response.data.data.length === 0) {
-        console.warn('⚠️ Data seller kosong. Kemungkinan:');
-        console.warn('1. Tidak ada seller dengan status "pending" di database');
-        console.warn('2. Seeder membuat seller dengan status "verified", bukan "pending"');
-        console.warn('3. Check query di SellerVerificationController: Seller::where("status", "pending")');
+      // Log success
+      if (response.data.data && response.data.data.length > 0) {
+        console.log(`✅ Loaded ${response.data.data.length} sellers`);
       }
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
@@ -102,16 +98,12 @@ export default function VerifikasiSellerPage() {
         user_id: selectedSeller.user_id,
       });
 
-      // Update local state
-      setSellers(
-        sellers.map((s) =>
-          s.user_id === selectedSeller.user_id ? { ...s, status: 'verified' } : s
-        )
-      );
-
       alert('Penjual berhasil diverifikasi! Email notifikasi telah dikirim.');
       setShowModal(false);
       setSelectedSeller(null);
+      
+      // Refresh data dari backend untuk mendapatkan status terbaru
+      await fetchSellers();
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
       alert(error.response?.data?.message || 'Gagal memverifikasi penjual');
@@ -130,17 +122,13 @@ export default function VerifikasiSellerPage() {
         reason: rejectReason,
       });
 
-      // Update local state
-      setSellers(
-        sellers.map((s) =>
-          s.user_id === selectedSeller.user_id ? { ...s, status: 'rejected' } : s
-        )
-      );
-
       alert('Penjual berhasil ditolak! Email notifikasi telah dikirim.');
       setShowModal(false);
       setSelectedSeller(null);
       setRejectReason('');
+      
+      // Refresh data dari backend untuk mendapatkan status terbaru
+      await fetchSellers();
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
       alert(error.response?.data?.message || 'Gagal menolak penjual');
@@ -260,42 +248,6 @@ export default function VerifikasiSellerPage() {
           </div>
         </div>
 
-        {/* Backend Connection Info */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <svg
-              className="w-5 h-5 text-yellow-600 mt-0.5 shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-yellow-900">
-                Koneksi Backend
-              </p>
-              <p className="text-sm text-yellow-700 mt-1">
-                Pastikan Laravel backend berjalan di <code className="bg-yellow-100 px-1 rounded">http://localhost:8000</code>.
-                <br />
-                Anda harus login sebagai admin dan memiliki token yang valid.
-                <br />
-                <button
-                  onClick={() => window.open('http://localhost:8000/api/admin/sellers', '_blank')}
-                  className="text-yellow-800 underline hover:text-yellow-900 mt-2 inline-block"
-                >
-                  Test endpoint di browser →
-                </button>
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -333,7 +285,7 @@ export default function VerifikasiSellerPage() {
               <p className="mt-4 text-gray-600 font-medium">
                 Tidak ada penjual dengan status &quot;{filterStatus === 'all' ? 'semua' : filterStatus}&quot;
               </p>
-              {sellers.length === 0 && !error && (
+              {/* {sellers.length === 0 && !error && (
                 <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-lg mx-auto text-left">
                   <p className="text-sm text-blue-900 font-semibold mb-2">💡 Tips:</p>
                   <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
@@ -343,7 +295,7 @@ export default function VerifikasiSellerPage() {
                     <li>Atau create seller baru dengan status pending via register form</li>
                   </ul>
                 </div>
-              )}
+              )} */}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -573,11 +525,11 @@ export default function VerifikasiSellerPage() {
                       Foto Penjual
                     </h3>
                     <div className="relative w-full h-64">
-                      <Image
-                        src={selectedSeller.foto_penjual}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/storage/${selectedSeller.foto_penjual}`}
                         alt="Foto Penjual"
-                        fill
-                        className="object-cover rounded-lg border border-gray-200"
+                        className="w-full h-full object-cover rounded-lg border border-gray-200"
                       />
                     </div>
                   </div>
@@ -589,11 +541,11 @@ export default function VerifikasiSellerPage() {
                       Foto KTP
                     </h3>
                     <div className="relative w-full h-64">
-                      <Image
-                        src={selectedSeller.foto_ktp}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/storage/${selectedSeller.foto_ktp}`}
                         alt="Foto KTP"
-                        fill
-                        className="object-cover rounded-lg border border-gray-200"
+                        className="w-full h-full object-cover rounded-lg border border-gray-200"
                       />
                     </div>
                   </div>
