@@ -69,8 +69,11 @@ Route::prefix('seller')->name('seller.')->group(function () {
 
 // Admin Routes - Seller Verification
 Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    Route::prefix('dashboard')->name('dashboard.')->group(function () {
-        // Route::get('/', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('index');
+    Route::prefix('dashboard')->name('dashboard.')->controller(App\Http\Controllers\Admin\AdminDashboardController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/active-sellers', 'getActiveSellers')->name('active-sellers');
+        Route::get('/sellers-by-province', 'getSellersByProvince')->name('sellers-by-province');
+        Route::get('/top-rated-products', 'getTopRatedProducts')->name('top-rated-products');
         Route::prefix('categories')->name('categories.')->controller(AdminCategoryProductController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/add', 'store')->name('store');
