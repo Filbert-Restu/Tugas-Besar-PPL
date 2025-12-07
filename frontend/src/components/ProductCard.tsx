@@ -17,7 +17,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       href={`/${shopIdentifier}/${product.id}`}
       className='bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group'
     >
-      <div className='h-48 bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center relative overflow-hidden'>
+      <div className='h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden'>
         {product.foto_produk_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -27,7 +27,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         ) : (
           <svg
-            className='w-20 h-20 text-gray-300 group-hover:scale-110 transition-transform duration-200'
+            className='w-20 h-20 text-gray-400 group-hover:scale-110 transition-transform duration-200'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'

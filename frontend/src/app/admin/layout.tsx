@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useAdminAuth } from '@/hooks/Auth/useAdminAuth';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const pathname = usePathname();
+  const { isActive, handleLogout, isLoading, isAuthenticated } = useAdminAuth();
 
   const menuItems = [
     {
@@ -116,12 +116,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     },
   ];
 
-  const isActive = (href: string) => {
-    if (href === '/admin') {
-      return pathname === href;
-    }
-    return pathname?.startsWith(href);
-  };
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className='flex h-screen items-center justify-center bg-gray-100'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-4 text-gray-600'>Memverifikasi akses...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className='flex h-screen bg-gray-100'>
@@ -189,7 +199,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* User Profile / Logout */}
         <div className='border-t border-gray-700 p-4'>
-          <button className='flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors'>
+          <button
+            onClick={handleLogout}
+            className='flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors'
+          >
             <svg
               className='w-5 h-5'
               fill='none'

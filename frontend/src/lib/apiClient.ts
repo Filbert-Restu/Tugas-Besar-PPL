@@ -37,11 +37,18 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Only redirect to login if we're on a protected route (seller/admin)
     if (error.response && error.response.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userData');
-        window.location.href = '/login';
+        const currentPath = window.location.pathname;
+        const isProtectedRoute =
+          currentPath.startsWith('/seller') || currentPath.startsWith('/admin');
+
+        if (isProtectedRoute) {
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('userData');
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

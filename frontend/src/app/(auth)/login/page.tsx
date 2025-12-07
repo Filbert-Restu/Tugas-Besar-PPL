@@ -53,17 +53,15 @@ export default function LoginPage() {
       localStorage.setItem('userData', JSON.stringify(data.data.user));
 
       // Redirect based on role
-      setTimeout(() => {
-        if (data.data.role === 'admin') {
-          router.push('/admin/dashboard');
-        } else if (data.data.role === 'penjual') {
-          router.push('/seller/dashboard');
-        } else if (data.data.role === 'pembeli') {
-          router.push('/home');
-        } else {
-          router.push('/');
-        }
-      }, 1000);
+      if (data.data.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else if (data.data.role === 'penjual') {
+        router.push('/seller/dashboard');
+      } else if (data.data.role === 'pembeli') {
+        router.push('/home');
+      } else {
+        router.push('/');
+      }
     } catch (err) {
       if (isAxiosError(err) && err.response) {
         const errorData = err.response.data;

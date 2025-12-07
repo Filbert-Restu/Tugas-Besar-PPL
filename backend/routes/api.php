@@ -10,7 +10,10 @@ use App\Http\Controllers\Admin\SellerVerificationController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\AdminCategoryProductController;
+
+// Seller Controllers
 use App\Http\Controllers\Seller\SellerDashboardController;
+use App\Http\Controllers\Seller\SellerReportController;
 
 // Main Controller
 use App\Http\Controllers\MainController;
@@ -18,26 +21,24 @@ use App\Http\Controllers\MainController;
 // Review Controller
 use App\Http\Controllers\ReviewController;
 
-// Public Routes - Product Listing
-// IMPORTANT: Specific routes MUST come before /{nama_toko}/{id} catch-all route
-
 // Categories List (Public) - Must be before /{nama_toko}/{id}
 Route::get('/categories', [MainController::class, 'categories'])->name('categories.public');
 
 Route::get('/', [MainController::class, 'index'])->name('index');
-// Route::get('/statistics', [MainController::class, 'statistics'])->name('statistics');
-Route::get('/{nama_toko}/{id}', [MainController::class, 'show'])->name('show');
-
-Route::prefix('reviews')->name('reviews.')->group(function () {
-    Route::get('/product/{productId}', [ReviewController::class, 'getProductReviews'])->name('product');
-    Route::post('/', [ReviewController::class, 'store'])->name('store');
-    Route::delete('/{reviewId}', [ReviewController::class, 'destroy'])->name('destroy');
-});
 
 // Authentication Routes
 Route::controller(AuthenticatedSessionController::class)->group(function () {
     Route::post('/login', 'store')->name('login');
     Route::post('/logout', 'destroy')->name('logout');
+});
+
+// Review Routes
+Route::prefix('reviews')->name('reviews.')->group(function () {
+    Route::controller(ReviewController::class)->group(function () {
+        Route::get('/product/{productId}', 'getProductReviews')->name('product');
+        Route::post('/', 'store')->name('store');
+        Route::delete('/{reviewId}', 'destroy')->name('destroy');
+    });
 });
 
 // Seller Auth Routes
@@ -46,24 +47,32 @@ Route::prefix('seller')->name('seller.')->group(function () {
     Route::post('/register', [RegisteredSellerController::class, 'store'])->name('seller-register');
 
     Route::middleware(['auth:sanctum', 'role:penjual'])->group(function () {
-        Route::get('/profile', [SellerProfilController::class, 'profile'])->name('profile');
-        Route::put('/profile', [SellerProfilController::class, 'updateProfile'])->name('profile.update');
+        Route::controller(SellerProfilController::class)->group(function () {
+        Route::get('/profile', 'profile')->name('profile');
+        Route::put('/profile', 'updateProfile')->name('profile.update');
+        });
         // Route::get('/products', [SellerProductController::class, 'detail'])->name('products.detail');
         Route::prefix('dashboard')->name('dashboard.')->group(function () {
             Route::get('/', [SellerDashboardController::class, 'show'])->name('index');
+            Route::get('/statistics', [SellerDashboardController::class, 'statistics'])->name('statistics');
             // Route::get('/', [SellerProfilController::class, 'dashboard'])->name('index');
+        });
 
-            // tambah kurang hapus edit produk
-            Route::prefix('products')->name('products.')->group(function () {
-                Route::get('/', [SellerProductController::class, 'show'])->name('.list');
-                Route::post('/add', [SellerProductController::class, 'add'])->name('.add');
-                Route::put('/edit', [SellerProductController::class, 'edit'])->name('.edit');
-                Route::post('/sum', [SellerProductController::class, 'sum'])->name('.sum');
-                Route::post('/sub', [SellerProductController::class, 'sub'])->name('.sub');
-                Route::post('/delete', [SellerProductController::class, 'delete'])->name('.delete');
+        // Reports
+        Route::prefix('reports')->name('reports.')->controller(SellerReportController::class)->group(function () {
+            Route::get('/stock-by-quantity', 'stockByQuantity')->name('stock-by-quantity');
+            Route::get('/stock-by-rating', 'stockByRating')->name('stock-by-rating');
+            Route::get('/low-stock', 'lowStock')->name('low-stock');
+        });
 
-            });
-
+        // tambah kurang hapus edit produk
+        Route::prefix('products')->name('products.')->controller(SellerProductController::class)->group(function () {
+            Route::get('/', 'show')->name('.list');
+            Route::post('/add', 'add')->name('.add');
+            Route::put('/edit', 'edit')->name('.edit');
+            Route::post('/sum', 'sum')->name('.sum');
+            Route::post('/sub', 'sub')->name('.sub');
+            Route::post('/delete', 'delete')->name('.delete');
         });
     });
 });
@@ -87,3 +96,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum', 'role:admin'
         Route::post('/reset-status', 'resetStatus')->name('reset-status');
     });
 });
+
+// Route::get('/statistics', [MainController::class, 'statistics'])->name('statistics');
+Route::get('/{nama_toko}/{id}', [MainController::class, 'show'])->name('show');

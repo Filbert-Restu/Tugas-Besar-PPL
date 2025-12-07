@@ -24,18 +24,18 @@ export function PurchaseCard({
 
   return (
     <div className='bg-white rounded-lg p-6 shadow-sm sticky top-4'>
-      <h3 className='font-semibold text-gray-900 mb-4'>
+      <h3 className='font-bold text-lg text-gray-900 mb-4'>
         Atur jumlah dan catatan
       </h3>
 
       {/* Quantity Selector */}
       <div className='mb-4'>
         <div className='flex items-center justify-between mb-2'>
-          <div className='flex items-center gap-3 border border-gray-300 rounded-lg'>
+          <div className='flex items-center gap-3 border border-gray-200 rounded-lg'>
             <button
               onClick={handleDecrement}
               disabled={quantity <= 1}
-              className='px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed'
+              className='px-3 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
             >
               −
             </button>
@@ -43,7 +43,7 @@ export function PurchaseCard({
             <button
               onClick={handleIncrement}
               disabled={quantity >= product.stok_produk}
-              className='px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed'
+              className='px-3 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
             >
               +
             </button>
@@ -60,7 +60,7 @@ export function PurchaseCard({
       {/* Subtotal */}
       <div className='mb-4 pb-4 border-b border-gray-200'>
         <div className='flex justify-between items-center'>
-          <span className='text-gray-600'>Subtotal</span>
+          <span className='text-gray-700 font-medium'>Subtotal</span>
           <span className='text-xl font-bold text-gray-900'>
             {formatCurrency(subtotal)}
           </span>
@@ -72,7 +72,7 @@ export function PurchaseCard({
         <Button
           onClick={onAddToCart}
           disabled={product.stok_produk === 0}
-          className='w-full h-12 bg-teal-500 hover:bg-teal-600 text-white font-semibold'
+          className='w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed'
         >
           + Keranjang
         </Button>
@@ -80,7 +80,7 @@ export function PurchaseCard({
           onClick={onBuyNow}
           disabled={product.stok_produk === 0}
           variant='outline'
-          className='w-full h-12 border-teal-500 text-teal-600 hover:bg-teal-50 font-semibold'
+          className='w-full h-12 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed'
         >
           Beli Langsung
         </Button>
@@ -90,7 +90,7 @@ export function PurchaseCard({
       <div className='mt-4 pt-4 border-t border-gray-200 flex items-center justify-around'>
         <button
           onClick={onChatSeller}
-          className='flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900'
+          className='flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors'
         >
           <svg
             className='w-5 h-5'
@@ -107,7 +107,7 @@ export function PurchaseCard({
           </svg>
           Chat
         </button>
-        <button className='flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900'>
+        <button className='flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors'>
           <svg
             className='w-5 h-5'
             fill='none'
@@ -123,7 +123,7 @@ export function PurchaseCard({
           </svg>
           Wishlist
         </button>
-        <button className='flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900'>
+        <button className='flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors'>
           <svg
             className='w-5 h-5'
             fill='none'

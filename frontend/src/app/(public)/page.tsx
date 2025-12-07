@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import FiltersBar from '@/components/FiltersBar';
+import Hero from '@/components/Hero';
+import FiltersBar from '@/components/Filter/FiltersBar';
 import ProductCard from '@/components/ProductCard';
 import Pagination from '@/components/Pagination';
 import EmptyState from '@/components/EmptyState';
-import { useProducts } from '@/hooks/useProducts';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { useProducts } from '@/hooks/Product/useProducts';
 
 export default function HomePage() {
   const {
@@ -25,11 +25,7 @@ export default function HomePage() {
   } = useProducts();
 
   if (loading) {
-    return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600'></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen size='xl' />;
   }
 
   return (
@@ -37,14 +33,7 @@ export default function HomePage() {
       {/* Header */}
       <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Hero Section */}
-        <div className='bg-linear-to-r from-blue-600 to-blue-800 rounded-2xl p-8 mb-8 text-white'>
-          <h2 className='text-3xl font-bold mb-2'>
-            Selamat Datang di MartPlace
-          </h2>
-          <p className='text-blue-100 text-lg'>
-            Temukan produk terbaik dengan rating dan komentar dari pembeli
-          </p>
-        </div>
+        <Hero />
 
         {/* Filters */}
         <FiltersBar
@@ -65,12 +54,7 @@ export default function HomePage() {
             </span>{' '}
             produk
           </p>
-          {loadingProducts && (
-            <div className='flex items-center gap-2 text-blue-600'>
-              <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600'></div>
-              <span className='text-sm'>Memuat...</span>
-            </div>
-          )}
+          {loadingProducts && <LoadingSpinner size='sm' text='Memuat...' />}
         </div>
 
         {products.length === 0 ? (

@@ -168,10 +168,8 @@ export default function RegisterPage() {
       setFotoPenjual(null);
       setFotoKtp(null);
 
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
-        router.push('/login');
-      }, 3000);
+      // Redirect to login
+      router.push('/login');
     } catch (err) {
       if (isAxiosError(err) && err.response) {
         const errorData = err.response.data;

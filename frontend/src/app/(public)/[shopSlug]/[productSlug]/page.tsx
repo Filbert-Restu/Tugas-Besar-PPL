@@ -1,19 +1,16 @@
 'use client';
 
-import React, { useState, use, useEffect } from 'react';
+import React, { use } from 'react';
 import { useRouter } from 'next/navigation';
 import ImageGallery from '@/components/ImageGallery';
-import ReviewCard from '@/components/ReviewCard';
-import QuantitySelector from '@/components/QuantitySelector';
 import { Button } from '@/components/Button';
 import EmptyState from '@/components/EmptyState';
 import { RatingDisplay } from '@/components/RatingDisplay';
 import { Breadcrumb } from '@/components/DetailProduct/Breadcrumb';
 import { ProductInfo } from '@/components/DetailProduct/ProductInfo';
-import { formatCurrency } from '@/utils/currency';
-import { useProductDetail } from '@/hooks/useProductDetail';
+import { useProductDetail } from '@/hooks/Product/useProductDetail';
+import { useProductReviews } from '@/hooks/Product/useProductReviews';
 import { PurchaseCard } from '@/components/DetailProduct/PurchaseCard';
-import { reviewService, Review } from '@/services/reviewService';
 
 export default function ProductDetailPage({
   params,
@@ -22,24 +19,6 @@ export default function ProductDetailPage({
 }) {
   const router = useRouter();
   const { shopSlug, productSlug } = use(params);
-  const [hoveredStar, setHoveredStar] = useState<number>(0);
-  const [selectedRating, setSelectedRating] = useState<number>(0);
-  const [reviewComment, setReviewComment] = useState<string>('');
-  const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
-  const [reviewMessage, setReviewMessage] = useState<{
-    type: 'success' | 'error';
-    text: string;
-  } | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [totalReviews, setTotalReviews] = useState<number>(0);
-  const [ratingBreakdown, setRatingBreakdown] = useState({
-    5: 0,
-    4: 0,
-    3: 0,
-    2: 0,
-    1: 0,
-  });
-  const [loadingReviews, setLoadingReviews] = useState<boolean>(false);
 
   // Use custom hook for product detail logic
   const {
@@ -51,33 +30,29 @@ export default function ProductDetailPage({
     handleChatSeller,
   } = useProductDetail({ shopSlug, productSlug });
 
-  // Fetch reviews when product is loaded
-  useEffect(() => {
-    const fetchReviews = async () => {
-      if (!product?.id) return;
-
-      setLoadingReviews(true);
-      try {
-        const response = await reviewService.getProductReviews(product.id);
-        setReviews(response.data.reviews);
-        setTotalReviews(response.data.total_reviews);
-        setRatingBreakdown(response.data.rating_breakdown);
-      } catch (error) {
-        console.error('Failed to fetch reviews:', error);
-      } finally {
-        setLoadingReviews(false);
-      }
-    };
-
-    fetchReviews();
-  }, [product?.id]);
+  // Use custom hook for reviews
+  const {
+    reviews,
+    totalReviews,
+    ratingBreakdown,
+    loadingReviews,
+    hoveredStar,
+    setHoveredStar,
+    selectedRating,
+    setSelectedRating,
+    reviewComment,
+    setReviewComment,
+    isSubmittingReview,
+    reviewMessage,
+    handleSubmitReview,
+  } = useProductReviews({ productId: product?.id });
 
   if (loading) {
     return (
       <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-          <p className='text-gray-600'>Memuat produk...</p>
+          <p className='text-gray-700'>Memuat produk...</p>
         </div>
       </div>
     );
@@ -102,77 +77,6 @@ export default function ProductDetailPage({
   }
 
   const images = product.foto_produk_url ? [product.foto_produk_url] : [];
-
-  // Handle review submission
-  const handleSubmitReview = async () => {
-    // Validate rating
-    if (selectedRating === 0) {
-      setReviewMessage({
-        type: 'error',
-        text: 'Silakan pilih rating terlebih dahulu',
-      });
-      return;
-    }
-
-    setIsSubmittingReview(true);
-    setReviewMessage(null);
-
-    try {
-      const response = await reviewService.submitReview({
-        product_id: product.id,
-        rating: selectedRating,
-        comment: reviewComment.trim() || undefined,
-      });
-
-      setReviewMessage({
-        type: 'success',
-        text: response.message || 'Ulasan berhasil ditambahkan',
-      });
-
-      // Reset form
-      setSelectedRating(0);
-      setReviewComment('');
-      setHoveredStar(0);
-
-      // Reload reviews
-      const reviewsResponse = await reviewService.getProductReviews(product.id);
-      setReviews(reviewsResponse.data.reviews);
-      setTotalReviews(reviewsResponse.data.total_reviews);
-      setRatingBreakdown(reviewsResponse.data.rating_breakdown);
-
-      // Optionally reload the page to update product rating
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } catch (error: any) {
-      console.error('Review submission error:', error);
-      console.error('Error response:', error.response?.data);
-
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.errors ||
-        'Terjadi kesalahan saat mengirim ulasan';
-
-      // If errors is an object, extract the first error message
-      let displayMessage = errorMessage;
-      if (typeof errorMessage === 'object' && errorMessage !== null) {
-        const firstError = Object.values(errorMessage)[0];
-        displayMessage = Array.isArray(firstError)
-          ? firstError[0]
-          : String(firstError);
-      }
-
-      setReviewMessage({
-        type: 'error',
-        text:
-          typeof displayMessage === 'string'
-            ? displayMessage
-            : 'Terjadi kesalahan saat mengirim ulasan',
-      });
-    } finally {
-      setIsSubmittingReview(false);
-    }
-  };
 
   return (
     <div className='min-h-screen bg-gray-50'>
@@ -223,7 +127,7 @@ export default function ProductDetailPage({
 
             {/* Right Side - Review Form (2/5 width) */}
             <div className='lg:col-span-2 lg:border-l lg:border-gray-200 lg:pl-8'>
-              <h3 className='font-semibold text-lg text-gray-900 mb-4'>
+              <h3 className='font-bold text-xl text-gray-900 mb-4'>
                 Berikan Penilaian
               </h3>
 
@@ -232,17 +136,25 @@ export default function ProductDetailPage({
                 <div
                   className={`mb-4 p-3 rounded-lg ${
                     reviewMessage.type === 'success'
-                      ? 'bg-green-50 text-green-800 border border-green-200'
-                      : 'bg-red-50 text-red-800 border border-red-200'
+                      ? 'bg-green-50 border border-green-200'
+                      : 'bg-red-50 border border-red-200'
                   }`}
                 >
-                  <p className='text-sm'>{reviewMessage.text}</p>
+                  <p
+                    className={`text-sm font-medium ${
+                      reviewMessage.type === 'success'
+                        ? 'text-green-800'
+                        : 'text-red-800'
+                    }`}
+                  >
+                    {reviewMessage.text}
+                  </p>
                 </div>
               )}
 
               {/* Star Rating Input */}
               <div className='mb-4'>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                <label className='block text-sm font-semibold text-gray-900 mb-2'>
                   Rating Anda
                 </label>
                 <div className='flex gap-1'>
@@ -276,9 +188,9 @@ export default function ProductDetailPage({
               <div className='mb-4'>
                 <label
                   htmlFor='review-comment'
-                  className='block text-sm font-medium text-gray-700 mb-2'
+                  className='block text-sm font-semibold text-gray-900 mb-2'
                 >
-                  Komentar
+                  Komentar (Opsional)
                 </label>
                 <textarea
                   id='review-comment'
@@ -307,7 +219,7 @@ export default function ProductDetailPage({
         <div className='mt-6 bg-white rounded-lg shadow-sm'>
           {/* Header */}
           <div className='border-b border-gray-200 px-6 py-4'>
-            <h2 className='font-semibold text-lg text-gray-900'>
+            <h2 className='font-bold text-xl text-gray-900'>
               Ulasan Pembeli ({totalReviews})
             </h2>
           </div>
@@ -316,7 +228,7 @@ export default function ProductDetailPage({
           <div className='p-6'>
             <div className='flex items-center justify-between mb-6'>
               <div>
-                <h3 className='font-semibold text-lg text-gray-900'>
+                <h3 className='font-bold text-lg text-gray-900'>
                   Rating Produk
                 </h3>
                 <div className='flex items-center gap-2 mt-2'>
@@ -340,7 +252,7 @@ export default function ProductDetailPage({
             {loadingReviews ? (
               <div className='text-center py-12'>
                 <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-                <p className='text-gray-600'>Memuat ulasan...</p>
+                <p className='text-gray-700'>Memuat ulasan...</p>
               </div>
             ) : reviews.length > 0 ? (
               <div className='space-y-6'>
@@ -368,7 +280,7 @@ export default function ProductDetailPage({
                           </svg>
                         ))}
                       </div>
-                      <span className='text-sm text-gray-600'>
+                      <span className='text-sm text-gray-500'>
                         {new Date(review.created_at).toLocaleDateString(
                           'id-ID',
                           {
@@ -382,7 +294,7 @@ export default function ProductDetailPage({
 
                     {/* Review Comment */}
                     {review.comment && (
-                      <p className='text-gray-700 text-sm leading-relaxed'>
+                      <p className='text-gray-800 text-sm leading-relaxed'>
                         {review.comment}
                       </p>
                     )}
@@ -392,7 +304,7 @@ export default function ProductDetailPage({
             ) : (
               <div className='text-center py-12'>
                 <svg
-                  className='w-16 h-16 text-gray-300 mx-auto mb-4'
+                  className='w-16 h-16 text-gray-400 mx-auto mb-4'
                   fill='none'
                   stroke='currentColor'
                   viewBox='0 0 24 24'
@@ -404,8 +316,11 @@ export default function ProductDetailPage({
                     d='M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z'
                   />
                 </svg>
-                <p className='text-gray-600'>
+                <p className='text-gray-700 font-medium'>
                   Belum ada ulasan untuk produk ini
+                </p>
+                <p className='text-sm text-gray-500 mt-2'>
+                  Jadilah yang pertama memberikan ulasan!
                 </p>
               </div>
             )}
