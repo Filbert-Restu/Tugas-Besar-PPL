@@ -7,6 +7,7 @@ use App\Http\Controllers\Seller\SellerProfilController;
 use App\Http\Controllers\Seller\SellerProductController;
 use App\Http\Controllers\Auth\Seller\RegisteredSellerController;
 use App\Http\Controllers\Admin\SellerVerificationController;
+use App\Http\Controllers\Admin\SellerManagementController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\AdminCategoryProductController;
@@ -37,6 +38,19 @@ Route::prefix('reviews')->name('reviews.')->group(function () {
 Route::controller(AuthenticatedSessionController::class)->group(function () {
     Route::post('/login', 'store')->name('login');
     Route::post('/logout', 'destroy')->name('logout');
+});
+
+// Email Verification Routes (for all users)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/email/verify/{id}/{hash}', function (\Illuminate\Foundation\Auth\EmailVerificationRequest $request) {
+        $request->fulfill();
+        return response()->json(['message' => 'Email berhasil diverifikasi!']);
+    })->middleware(['signed'])->name('verification.verify');
+
+    Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+        return response()->json(['message' => 'Link verifikasi telah dikirim ulang ke email Anda!']);
+    })->middleware(['throttle:6,1'])->name('verification.send');
 });
 
 // Seller Auth Routes
@@ -78,12 +92,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum', 'role:admin'
             Route::delete('/delete', 'destroy')->name('destroy');
         });
     });
-    Route::prefix('sellers')->name('sellers.')->controller(SellerVerificationController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/{userId}', 'show')->name('show');
-        Route::post('/approve', 'approve')->name('approve');
-        Route::post('/reject', 'reject')->name('reject');
-        Route::post('/reset-status', 'resetStatus')->name('reset-status');
+    Route::prefix('sellers')->name('sellers.')->group(function () {
+        // Seller Verification Routes
+        Route::controller(SellerVerificationController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{userId}', 'show')->name('show');
+            Route::post('/approve', 'approve')->name('approve');
+            Route::post('/reject', 'reject')->name('reject');
+            Route::post('/reset-status', 'resetStatus')->name('reset-status');
+        });
+        
+        // Seller Management Routes (Suspend/Activate)
+        Route::controller(SellerManagementController::class)->group(function () {
+            Route::post('/suspend', 'suspend')->name('suspend');
+            Route::post('/activate', 'activate')->name('activate');
+            Route::get('/export-pdf', 'exportPDF')->name('export-pdf');
+        });
     });
 });
 

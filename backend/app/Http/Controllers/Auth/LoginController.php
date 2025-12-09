@@ -31,7 +31,17 @@ class LoginController extends Controller
         // 3. Ambil Data User yang berhasil login
         $user = Auth::user();
 
-        // 4. Validasi khusus untuk penjual
+        // 4. Check Email Verification (untuk semua user)
+        if (!$user->hasVerifiedEmail()) {
+            Auth::guard('web')->logout();
+            return response()->json([
+                'message' => 'Email Anda belum diverifikasi. Silakan cek inbox email Anda dan klik link verifikasi.',
+                'email_verified' => false,
+                'email' => $user->email
+            ], 403);
+        }
+
+        // 5. Validasi khusus untuk penjual (setelah email verified)
         if ($user->role === 'penjual') {
             $seller = Seller::where('user_id', $user->id)->first();
 
@@ -45,8 +55,9 @@ class LoginController extends Controller
             if ($seller->status === 'pending') {
                 Auth::guard('web')->logout();
                 return response()->json([
-                    'message' => 'Akun penjual Anda masih dalam proses verifikasi admin. Mohon tunggu.',
-                    'status' => 'pending'
+                    'message' => 'Email Anda sudah terverifikasi. Akun penjual Anda masih dalam proses verifikasi admin. Mohon tunggu.',
+                    'status' => 'pending',
+                    'email_verified' => true
                 ], 403);
             }
 
@@ -54,15 +65,16 @@ class LoginController extends Controller
                 Auth::guard('web')->logout();
                 return response()->json([
                     'message' => 'Akun penjual Anda ditolak oleh admin. Silakan hubungi administrator.',
-                    'status' => 'rejected'
+                    'status' => 'rejected',
+                    'email_verified' => true
                 ], 403);
             }
         }
 
-        // 5. Hapus token lama (Opsional - agar 1 user 1 device)
+        // 6. Hapus token lama (Opsional - agar 1 user 1 device)
         $user->tokens()->delete();
 
-        // 6. Buat Token Baru (Sanctum)
+        // 7. Buat Token Baru (Sanctum)
         // Kita bisa memberi 'ability' pada token berdasarkan role (opsional)
         $tokenAbilities = match ($user->role) {
             'admin' => ['server:admin'],
@@ -72,7 +84,7 @@ class LoginController extends Controller
 
         $token = $user->createToken('auth_token', $tokenAbilities)->plainTextToken;
 
-        // 7. Return JSON Lengkap
+        // 8. Return JSON Lengkap
         // Frontend butuh 'role' untuk melakukan redirect
         return response()->json([
             'message' => 'Login berhasil',

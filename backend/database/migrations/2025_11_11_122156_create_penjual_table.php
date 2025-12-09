@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('foto_penjual')->nullable();
             $table->string('foto_ktp')->nullable();
             $table->enum('status', ['verified', 'pending', 'rejected'])->default('pending');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

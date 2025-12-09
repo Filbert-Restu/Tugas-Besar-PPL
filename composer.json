@@ -1,0 +1,7 @@
+{
+    "require": {
+        "symfony/mailgun-mailer": "^8.0",
+        "symfony/http-client": "^8.0",
+        "barryvdh/laravel-dompdf": "^3.1"
+    }
+}

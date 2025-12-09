@@ -144,7 +144,7 @@ export default function RegisterPage() {
       });
 
       setSuccess(
-        'Registrasi berhasil! Silakan tunggu persetujuan admin. Anda akan dihubungi melalui email.'
+        'Registrasi berhasil! Kami telah mengirimkan link verifikasi ke email Anda. Silakan cek inbox (atau folder spam) dan klik link verifikasi, kemudian tunggu persetujuan admin.'
       );
 
       // Reset form

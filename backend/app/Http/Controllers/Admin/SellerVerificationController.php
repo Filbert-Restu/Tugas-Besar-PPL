@@ -28,9 +28,11 @@ class SellerVerificationController extends Controller
                     'nama_toko' => $seller->nama_toko,
                     'status' => $seller->status,
                     'created_at' => $seller->created_at,
+                    'updated_at' => $seller->updated_at,
                     'email' => $seller->user->email,
                     'name' => $seller->user->name,
                     'nomor_telepon' => $seller->nomor_telepon,
+                    'is_active' => $seller->user->is_active ?? true,
                 ];
             }),
         ]);
