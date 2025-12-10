@@ -7,15 +7,21 @@ export function useAdminAuth() {
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminName, setAdminName] = useState<string>('Admin');
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const userRole = localStorage.getItem('userRole');
+        const userName = localStorage.getItem('userName');
 
         if (!userRole || userRole !== 'admin') {
           router.replace('/login');
           return;
+        }
+
+        if (userName) {
+          setAdminName(userName);
         }
 
         // Verify with backend by calling an admin endpoint
@@ -63,5 +69,6 @@ export function useAdminAuth() {
     pathname,
     isLoading,
     isAuthenticated,
+    adminName,
   };
 }

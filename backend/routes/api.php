@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\SellerVerificationController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\AdminCategoryProductController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminReportController;
 
 // Seller Controllers
 use App\Http\Controllers\Seller\SellerDashboardController;
@@ -80,7 +82,7 @@ Route::prefix('seller')->name('seller.')->group(function () {
 // Admin Routes - Seller Verification
 Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
-        // Route::get('/', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('index');
+        Route::get('/statistics', [AdminDashboardController::class, 'statistics'])->name('statistics');
         Route::prefix('categories')->name('categories.')->controller(AdminCategoryProductController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/add', 'store')->name('store');
@@ -88,6 +90,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum', 'role:admin'
             Route::delete('/delete', 'destroy')->name('destroy');
         });
     });
+
+    // Reports - PDF Downloads
+    Route::prefix('reports')->name('reports.')->controller(AdminReportController::class)->group(function () {
+        Route::get('/sellers', 'sellerReport')->name('sellers'); // SRS-MartPlace-09
+        Route::get('/sellers-by-province', 'sellerByProvinceReport')->name('sellers-by-province'); // SRS-MartPlace-10
+        Route::get('/products-rating', 'productRatingReport')->name('products-rating'); // SRS-MartPlace-11
+    });
+
     Route::prefix('sellers')->name('sellers.')->controller(SellerVerificationController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{userId}', 'show')->name('show');

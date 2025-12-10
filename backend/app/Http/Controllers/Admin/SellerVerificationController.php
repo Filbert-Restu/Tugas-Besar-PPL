@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\SellerApproved;
+use App\Mail\SellerRejected;
 use App\Models\Seller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -13,13 +14,21 @@ use Illuminate\Support\Facades\Mail;
 class SellerVerificationController extends Controller
 {
     /**
-     * daftar penjual butuh verifikasi
+     * daftar penjual dengan filter status opsional
      */
-    public function index()
+    public function index(Request $request)
     {
-        $sellers = Seller::where('status', 'pending')->with('user')->get();
+        $query = Seller::with('user');
+
+        // Filter berdasarkan status jika ada parameter
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $sellers = $query->get();
+
         return response()->json([
-            'message' => 'Daftar penjual yang menunggu verifikasi',
+            'message' => 'Daftar penjual',
             'data' => $sellers->map(function ($seller) {
                 return [
                     'user_id' => $seller->user_id,
@@ -90,7 +99,12 @@ class SellerVerificationController extends Controller
         $seller->update(['status' => 'verified']);
 
         // Kirim email notifikasi ke penjual
-        Mail::to($seller->user->email)->send(new SellerApproved($seller));
+        try {
+            Mail::to($seller->user->email)->send(new SellerApproved($seller));
+        } catch (\Exception $e) {
+            // Log error but don't fail the approval process
+            \Log::error('Failed to send approval email: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Penjual berhasil diverifikasi',
@@ -129,8 +143,13 @@ class SellerVerificationController extends Controller
 
         $seller->update(['status' => 'rejected']);
 
-        // TODO: Kirim email notifikasi ke penjual dengan alasan penolakan
-        // event(new SellerRejected($seller, $validated['reason'] ?? null));
+        // Kirim email notifikasi ke penjual dengan alasan penolakan
+        try {
+            Mail::to($seller->user->email)->send(new SellerRejected($seller, $validated['reason'] ?? null));
+        } catch (\Exception $e) {
+            // Log error but don't fail the rejection process
+            \Log::error('Failed to send rejection email: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Penjual berhasil ditolak',
