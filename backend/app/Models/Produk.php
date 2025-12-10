@@ -48,7 +48,7 @@ class Produk extends Model
      *
      * @var array
      */
-    protected $appends = ['rating'];
+    protected $appends = ['rating', 'foto_produk_url'];
 
     /**
      * Get the seller that owns the produk.

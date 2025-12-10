@@ -161,6 +161,16 @@ class SellerProductController extends Controller
                 ], 404);
             }
 
+            // Upload foto baru jika ada
+            if ($request->hasFile('foto_produk')) {
+                // Hapus foto lama jika ada
+                if ($produk->foto_produk && Storage::disk('public')->exists($produk->foto_produk)) {
+                    Storage::disk('public')->delete($produk->foto_produk);
+                }
+                // Upload foto baru
+                $validated['foto_produk'] = $request->file('foto_produk')->store('produk', 'public');
+            }
+
             // Update data produk
             $produk->update($validated);
 
